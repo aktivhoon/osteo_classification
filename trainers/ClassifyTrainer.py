@@ -8,14 +8,13 @@ import numpy as numpy
 import torch
 import torch.nn as nn
 from .BaseTrainer import BaseTrainer
-from models.unet_parts import weights_init_kaiming
 from utils import torch_downsample
 
 from sklearn.metrics import f1_score, confusion_matrix, recall_score, jaccard_similarity_score, roc_curve, precision_recall_curve, roc_auc_score, auc
 
 class ClassifyTrainer(BaseTrainer):
 	def __init__(self, arg, G, torch_device, class_loss):
-		super(CNNTrainer, self).__init__(arg, torch_device)
+		super(ClassifyTrainer, self).__init__(arg, torch_device)
 		self.class_loss = class_loss
 
 		self.G = G
@@ -23,13 +22,14 @@ class ClassifyTrainer(BaseTrainer):
 		self.beta = arg.beta
 		self.fold = arg.fold
 		self.optim = torch.optim.Adam(self.G.parameters(), lr = arg.lrG, betas = arg.beta)
-
+		self.model_name = arg.model
 		self.best_metric = 0
 		self.sigmoid = nn.Sigmoid().to(self.torch_device)
 
 		self.load()
 		self.prev_epoch_loss = 0
-		self.model_name = arg.model
+
+		print(self.model_name)
 
 	def save(self, epoch, filename = "models"):
 		save_path = self.save_path + "/" + self.model_name +"/fold%s"%(self.fold)

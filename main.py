@@ -7,12 +7,10 @@ from sklearn.metrics import jaccard_similarity_score, f1_score
 
 import utils
 #import preprocess
-from Loader import Loader
+from loader import loader
 from models.dense_net import DenseNet
 
 from trainers.ClassifyTrainer import ClassifyTrainer
-
-from loss import FocalLoss, TverskyLoss
 
 def arg_parse():
     desc = "Osteo Classification"
@@ -20,6 +18,8 @@ def arg_parse():
 
     parser.add_argument('--gpus', type=str, default="0,1,2,3",
                         help="Select GPU Numbering | 0,1,2,3 | ")
+    parser.add_argument('--cpus', type=int, default="4",
+                        help="Select CPU Number workers")
     parser.add_argument('--model', type=str, default='dense_net',
                         choices=["dense_net"], required=True)
     parser.add_argument('--norm', type=str, default='bn', choices=["in", "bn", "bin"])
@@ -46,7 +46,7 @@ def arg_parse():
                         help='The setting sampler')
 
     parser.add_argument('--epoch', type=int, default=300, help='The number of epochs')
-    parser.add_argument('--batch_size', type=int, default=32, help='The size of batch')
+    parser.add_argument('--batch_size', type=int, default=2, help='The size of batch')
     parser.add_argument('--test', action="store_true", help='The size of batch')
 
     parser.add_argument('--save_dir', type=str, default='',
@@ -66,7 +66,7 @@ def arg_check(arg):
         if chk not in "0123456789,":
             raise argparse.ArgumentTypeError("gpus must be 0,1,2 or 2,3,4 ...")
 
-    check_dict = [("cpus", arg.cpus), ("epoch", arg.epoch), ("batch", arg.batch_size), ("ngf", arg.ngf), ("lrG", arg.lrG)]
+    check_dict = [("cpus", arg.cpus), ("epoch", arg.epoch), ("batch", arg.batch_size), ("lrG", arg.lrG)]
     for chk in check_dict:
         if chk[1] <= 0:
             raise argparse.ArgumentTypeError("%s <= 0" % (chk[0]))
@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
 #	act = nn.ReLU
 
-	net = DenseNet(growthRate = 12, depth = 20, reduction = 0.5, bottleneck = True, nClasses = 2)
+	net = DenseNet(growthRate = 12, depth = 40, reduction = 0.5, bottleneck = True, nClasses = 2)
 
 	net = nn.DataParallel(net).to(torch_device)
 

@@ -50,7 +50,7 @@ class Dataset(data.Dataset):
         img = np.load(img_path)
         # 2D ( 1 x H x W )
         input_np  = img.copy()
-        target_np =  int(img_path.split("_")[-1][0])
+        target_np = np.array([int(img_path.split("_")[-1][0])])
         if idx >= self.origin_image_len:
             for t in self.transform:
                 input_np = t(input_np)
