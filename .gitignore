@@ -1,0 +1,6 @@
+## Ignore File ##
+
+## Ignore Data ##
+data/
+.DS_Store
+outs/
