@@ -50,6 +50,7 @@ class Dataset(data.Dataset):
         img = np.load(img_path)
         # 2D ( 1 x H x W )
         input_np  = img.copy()
+<<<<<<< HEAD
         true_class = np.array([int(img_path.split("_")[-1][0])])
         if idx >= self.origin_image_len:
             for t in self.transform:
@@ -58,6 +59,13 @@ class Dataset(data.Dataset):
             target_np = np.array([0, 1])
         elif true_class == 0:
             target_np = np.array([1, 0])
+=======
+        target_np = np.array([int(img_path.split("_")[-1][0])])
+        if idx >= self.origin_image_len:
+            for t in self.transform:
+                input_np = t(input_np)
+
+>>>>>>> 58fe86efb8d6b036bd6bb6f3b183fb70f3957afe
         input_  = self._np2tensor(input_np).resize_((1, *input_np.shape))
         target_  = self._np2tensor(target_np)
         return input_, target_, os.path.basename(img_path)

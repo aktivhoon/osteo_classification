@@ -112,13 +112,12 @@ class ClassifyTrainer(BaseTrainer):
 
 			for i, (input_, target_, _) in enumerate(val_loader):
 				_, output_, target_ = self.forward_for_test(input_, target_)
-
 				cm.update(utils.confusion_matrix(output_, target_, 0.5, reduce = False))
-
 			metric = cm.accuracy
 			if metric > self.best_metric:
 				self.best_metric = metric
 				self.save(epoch)
+
 
 			self.logger.write("[Val] epoch: %d accuracy: %f f05: %f f1: %f f2: %f" % (epoch, cm.accuracy, cm.f05, cm.f1, cm.f2))
 

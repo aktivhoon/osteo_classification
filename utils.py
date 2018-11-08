@@ -56,6 +56,7 @@ class ConfusionMatrix(object):
 		self.precision = 0
 		self.recall = 0
 
+<<<<<<< HEAD
 	def update(self, cm):
 		self.tp.update(cm[0])
 		self.tn.update(cm[1])
@@ -65,6 +66,19 @@ class ConfusionMatrix(object):
 		self.prec = self.tp.sum / (self.tp.sum + self.fp.sum + 0.00001)
 		self.recall = self.tp.sum / (self.tp.sum + self.fn.sum + 0.00001)
 		self.accuracy = (self.tp.sum + self.tn.sum) / (self.total)
+=======
+	def update(self, cm, n):
+		self.tp.update(cm[0], n = n)
+		self.tn.update(cm[1], n = n)
+		self.fp.update(cm[2], n = n)
+		self.fn.update(cm[3], n = n)
+
+		self.total = self.tp.sum + self.tn.sum + self.fp.sum + self.fn.sum
+
+		self.prec = self.tp.sum / (self.tp.sum + self.fp.sum + 0.00001)
+		self.recall = self.tp.sum / (self.tp.sum + self.fn.sum + 0.00001)
+
+>>>>>>> 58fe86efb8d6b036bd6bb6f3b183fb70f3957afe
 		self.f1 = (2 * self.prec * self.recall / (self.prec + self.recall + 0.00001)).mean()
 		self.f05 = ((1 + 0.25) * self.prec * self.recall / (0.25 * self.prec + self.recall + 0.00001)).mean()
 		self.f2 = ((1 + 4) * self.prec * self.recall / (4 * self.prec + self.recall + 0.00001)).mean()

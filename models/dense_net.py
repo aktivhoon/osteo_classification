@@ -38,6 +38,10 @@ class DenseNet(nn.Module):
         nChannels = nOutChannels
         self.dense3 = self._make_dense(nChannels, growthRate, nDenseBlocks, bottleneck)
         nChannels += nDenseBlocks * growthRate
+<<<<<<< HEAD
+=======
+        print(nChannels)
+>>>>>>> 58fe86efb8d6b036bd6bb6f3b183fb70f3957afe
         self.bn1 = nn.BatchNorm2d(nChannels)
         self.fc = nn.Linear(nChannels, nClasses)
 
