@@ -92,10 +92,6 @@ if __name__ == "__main__":
 	test_loader = loader(test_path, arg.batch_size, transform = None, sampler = '',
 		torch_type = 'float', cpus = 4, shuffle = False, drop_last = False)
 
-#	norm_layer = nn.BatchNorm2d
-
-#	act = nn.ReLU
-
 	net = DenseNet(growthRate = 12, depth = 40, reduction = 0.5, bottleneck = True, nClasses = 2)
 
 	net = nn.DataParallel(net).to(torch_device)
