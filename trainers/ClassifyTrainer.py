@@ -22,7 +22,6 @@ class ClassifyTrainer(BaseTrainer):
 		self.beta = arg.beta
 		self.fold = arg.fold
 		self.optim = torch.optim.Adam(self.G.parameters(), lr = arg.lrG, betas = arg.beta)
-		self.model_name = arg.model
 		self.best_metric = 0
 		self.sigmoid = nn.Sigmoid().to(self.torch_device)
 
@@ -32,11 +31,11 @@ class ClassifyTrainer(BaseTrainer):
 		print(self.model_name)
 
 	def save(self, epoch, filename = "models"):
-		save_path = self.save_path + "/" + self.model_name +"/fold%s"%(self.fold)
-		if os.path.exists(self.save_path + "/" + self.model_name) is False:
-			os.mkdir(self.save_path + "/" + self.model_name)
-		if os.path.exists(save_path + "/" + self.model_name) is False:
-			os.mkdir(save_path + "/" + self.model_name)
+		save_path = self.save_path +"/fold%s"%(self.fold)
+		if os.path.exists(self.save_path) is False:
+			os.mkdir(self.save_path)
+		if os.path.exists(save_path) is False:
+			os.mkdir(save_path)
 
 		torch.save({"model_type": self.model_type,
 			"start_epoch": epoch + 1,
@@ -155,7 +154,7 @@ class ClassifyTrainer(BaseTrainer):
 
 			for i, (input_, target_, f_name) in enumerate(test_loader):
 				input_, output_, target_ = self._test_toward(input_, target_)
-				cm.update(utils.confusion_matrix_2d(output_, target_, 0.5, reduce=False), n=output_.shape[0])
+				cm.update(utils.confusion_matrix(output_, target_, 0.5, reduce=False), n=output_.shape[0])
 
 				input_np = input_.type(torch.FloatTensor).numpy()
 				target_np = target_.type(torch.FloatTensor).numpy()
@@ -165,18 +164,16 @@ class ClassifyTrainer(BaseTrainer):
 				y_pred = np.concatenate([y_pred, output_np], axis = 0)
 
 				for batch_idx in range(0, input_.shape[0]):
-					input_b = input_np[batch_idx, 0, :, :]
 					target_b = target_np[batch_idx]
 					output_b = output_np[batch_idx]
 
-					save_path = "%s/%s/fold%s/%s" % (self.save_path, self.model_name, self.fold, f_name[batch_idx][:-4])
-					utils.class_save(save_path, f_name, target_b, output_b)
-					self.logger.will_write("[Save] fname:%s dice:%f jss:%f" % (f_name[batch_idx][:-4], cm.dice.val[batch_idx], cm.jcc.val[batch_idx]))
+					save_path = "%s/fold%s/%s" % (self.save_path, self.fold, f_name[batch_idx][:-4])
+					self.logger.will_write("[Save] fname:%s true_label:%f prediction:%f" % (f_name[batch_idx][:-4], target_b, output_b))
 
 			pr_values = np.array(precision_recall_curve(y_true, y_pred))
 
 			roc_auc = roc_auc_score(y_true, y_pred)
 			pr_auc = auc(pr_values[0], pr_values[1], reorder=True)
 
-		self.logger.write("Best dice:%f jcc:%f f05:%f f1:%f f2:%f roc:%f pr:%f" % (cm.dice.avg, cm.jcc.avg, cm.f05, cm.f1, cm.f2, roc_auc, pr_auc))
+		self.logger.write("f05:%f f1:%f f2:%f roc:%f pr:%f" % (cm.f05, cm.f1, cm.f2, roc_auc, pr_auc))
 		print("End Test\n")

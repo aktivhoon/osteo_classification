@@ -18,7 +18,7 @@ def arg_parse():
 
     parser.add_argument('--gpus', type=str, default="0,1,2,3",
                         help="Select GPU Numbering | 0,1,2,3 | ")
-    parser.add_argument('--cpus', type=int, default="4",
+    parser.add_argument('--cpus', type=int, default="32",
                         help="Select CPU Number workers")
     parser.add_argument('--model', type=str, default='dense_net',
                         choices=["dense_net"], required=True)
@@ -27,6 +27,8 @@ def arg_parse():
 
     parser.add_argument('--augment', type=str, default='',
                         help='The type of augmentaed ex) crop,rotate ..  | crop | flip | elastic | rotate |')
+
+
 
     # TODO : Weighted BCE
     parser.add_argument('--loss', type=str, default='BCE',
@@ -55,6 +57,10 @@ def arg_parse():
     # Adam Parameter
     parser.add_argument('--lrG',   type=float, default=0.0005)
     parser.add_argument('--beta',  nargs="*", type=float, default=(0.5, 0.999))
+
+    # DenseNet Parameter
+    parser.add_argument('--growthRate', type=int, default = 12)
+    parser.add_argument('--depth', type=int, default = 40)
 
     return parser.parse_args()
 
@@ -86,13 +92,13 @@ if __name__ == "__main__":
 	test_path = "data/test/"
 
 	train_loader = loader(train_path, arg.batch_size, transform = None, sampler = '',
-		torch_type = 'float', cpus = 4, shuffle = True, drop_last = True)
+		torch_type = 'float', cpus = arg.cpus, shuffle = True, drop_last = True)
 	val_loader = loader(val_path, arg.batch_size, transform = None, sampler = '',
-		torch_type = 'float', cpus = 4, shuffle = False, drop_last = False)
+		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = False)
 	test_loader = loader(test_path, arg.batch_size, transform = None, sampler = '',
-		torch_type = 'float', cpus = 4, shuffle = False, drop_last = False)
+		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = False)
 
-	net = DenseNet(growthRate = 12, depth = 40, reduction = 0.5, bottleneck = True, nClasses = 2)
+	net = DenseNet(growthRate = arg.growthRate, depth = arg.depth, reduction = 0.5, bottleneck = True, nClasses = 2)
 
 	net = nn.DataParallel(net).to(torch_device)
 
