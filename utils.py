@@ -127,10 +127,6 @@ def get_roc_pr(tn, fp, fn, tp):
 
 	return sensitivity, 1 - specificty, precision, recall, f1
 
-def class_save(save_path, f_name, *args):
-	total = np.concatenate(args, axis = 1)
-	np.save(save_path + '.npy', total)
-	scipy.misc.imsave(save_path + '.jpg', total)
 
 def slack_alarm(send_id, send_msg="Train Done"):
     """
