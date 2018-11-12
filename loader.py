@@ -54,10 +54,7 @@ class Dataset(data.Dataset):
         if idx >= self.origin_image_len:
             for t in self.transform:
                 input_np = t(input_np)
-        if true_class == 1:
-            target_np = np.array([0, 1])
-        elif true_class == 0:
-            target_np = np.array([1, 0])
+        target_np = true_class
         input_  = self._np2tensor(input_np).resize_((1, *input_np.shape))
         target_  = self._np2tensor(target_np)
         return input_, target_, os.path.basename(img_path)

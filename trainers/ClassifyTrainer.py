@@ -112,7 +112,7 @@ class ClassifyTrainer(BaseTrainer):
 				output_ = self.G(input_).sigmoid()
 				target_ = target_.to(self.torch_device)
 
-				ground_truth = torch.argmax(target_, dim=1).int()
+				ground_truth = target_.int()
 				prediction = torch.argmax(output_, dim=1).int()
 
 				cm.update(utils.confusion_matrix(prediction, ground_truth, reduce = False))

@@ -105,7 +105,7 @@ if __name__ == "__main__":
 	net = nn.DataParallel(net).to(torch_device)
 
 	# TODO : redfine loss
-	class_loss = nn.BCEWithLogitsLoss()
+	class_loss = nn.CrossEntropyLoss()
 
 	model = ClassifyTrainer(arg, net, torch_device, class_loss = class_loss)
 
