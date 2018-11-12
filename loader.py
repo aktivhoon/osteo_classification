@@ -50,7 +50,6 @@ class Dataset(data.Dataset):
         img = np.load(img_path)
         # 2D ( 1 x H x W )
         input_np  = img.copy()
-<<<<<<< HEAD
         true_class = np.array([int(img_path.split("_")[-1][0])])
         if idx >= self.origin_image_len:
             for t in self.transform:
@@ -59,29 +58,22 @@ class Dataset(data.Dataset):
             target_np = np.array([0, 1])
         elif true_class == 0:
             target_np = np.array([1, 0])
-=======
-        target_np = np.array([int(img_path.split("_")[-1][0])])
-        if idx >= self.origin_image_len:
-            for t in self.transform:
-                input_np = t(input_np)
-
->>>>>>> 58fe86efb8d6b036bd6bb6f3b183fb70f3957afe
         input_  = self._np2tensor(input_np).resize_((1, *input_np.shape))
         target_  = self._np2tensor(target_np)
         return input_, target_, os.path.basename(img_path)
 
 
 def make_weights_for_balanced_classes(seg_dataset):
-    count = [0, 0] # No mask, mask
-    for img, mask in seg_dataset:
-        count[int((mask > 0).any())] += 1
+    count = [0, 0] # normal, osteoporosis
+    for (img, target, _) in seg_dataset:
+        count[int(target[0]==1)] += 1
 
     N = float(sum(count))
     weight_per_class = [N / c for c in count]
 
     weight = [0] * len(seg_dataset)
-    for i, (img, mask) in enumerate(seg_dataset):
-        weight[i] = weight_per_class[int((mask > 0).any())]
+    for i, (img, target, _) in enumerate(seg_dataset):
+        weight[i] = weight_per_class[int(target[0]==1)]
 
     return weight, count
 

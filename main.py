@@ -6,7 +6,7 @@ import torch.nn as nn
 from sklearn.metrics import jaccard_similarity_score, f1_score
 
 import utils
-#import preprocess
+import preprocess
 from loader import loader
 from models.dense_net import DenseNet
 
@@ -90,13 +90,15 @@ if __name__ == "__main__":
 	train_path = "data/train/"
 	val_path = "data/val/"
 	test_path = "data/test/"
+	
+	preprocess = preprocess.get_preprocess(arg.augment)
 
-	train_loader = loader(train_path, arg.batch_size, transform = None, sampler = '',
+	train_loader = loader(train_path, arg.batch_size, transform = preprocess, sampler = "weight",
 		torch_type = 'float', cpus = arg.cpus, shuffle = True, drop_last = True)
 	val_loader = loader(val_path, arg.batch_size, transform = None, sampler = '',
-		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = False)
+		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)
 	test_loader = loader(test_path, arg.batch_size, transform = None, sampler = '',
-		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = False)
+		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)
 
 	net = DenseNet(growthRate = arg.growthRate, depth = arg.depth, reduction = 0.5, bottleneck = True, nClasses = 2)
 
@@ -109,3 +111,4 @@ if __name__ == "__main__":
 
 	if arg.test is False:
 		model.train(train_loader, val_loader)
+	model.test(test_loader, val_loader)

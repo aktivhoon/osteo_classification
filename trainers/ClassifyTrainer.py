@@ -3,7 +3,7 @@ from multiprocessing import Pool, Queue, Process
 
 import scipy
 import utils
-import numpy as numpy
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -28,8 +28,6 @@ class ClassifyTrainer(BaseTrainer):
 		self.load()
 		self.prev_epoch_loss = 0
 
-		print(self.model_name)
-
 	def save(self, epoch, filename = "models"):
 		save_path = self.save_path +"/fold%s"%(self.fold)
 		if os.path.exists(self.save_path) is False:
@@ -46,7 +44,7 @@ class ClassifyTrainer(BaseTrainer):
 		print("Model saved %d epoch" % (epoch))
 
 	def load(self):
-		save_path = self.save_path + "/" + self.model_name +  "/fold%s"%(self.fold)
+		save_path = self.save_path + "/fold%s"%(self.fold)
 		if os.path.exists(save_path + "/models.pth.tar") is True:
 			print("Load %s File" % (save_path))
 			ckpoint = torch.load(save_path + "/models.pth.tar")
@@ -110,9 +108,15 @@ class ClassifyTrainer(BaseTrainer):
 			cm = utils.ConfusionMatrix()
 
 			for i, (input_, target_, _) in enumerate(val_loader):
-				_, output_, target_ = self.forward_for_test(input_, target_)
-				cm.update(utils.confusion_matrix(output_, target_, 0.5, reduce = False))
-			metric = cm.accuracy
+				input_ = input_.to(self.torch_device)
+				output_ = self.G(input_).sigmoid()
+				target_ = target_.to(self.torch_device)
+
+				ground_truth = torch.argmax(target_, dim=1).int()
+				prediction = torch.argmax(output_, dim=1).int()
+
+				cm.update(utils.confusion_matrix(prediction, ground_truth, reduce = False))
+			metric = cm.f1
 			if metric > self.best_metric:
 				self.best_metric = metric
 				self.save(epoch)
@@ -153,27 +157,28 @@ class ClassifyTrainer(BaseTrainer):
 			y_pred = np.array([])
 
 			for i, (input_, target_, f_name) in enumerate(test_loader):
-				input_, output_, target_ = self._test_toward(input_, target_)
-				cm.update(utils.confusion_matrix(output_, target_, 0.5, reduce=False), n=output_.shape[0])
+				input_, output_, target_ = self.forward_for_test(input_, target_)
+				ground_truth = torch.argmax(target_, dim=1).int()
+				prediction = torch.argmax(output_, dim=1).int()
 
-				input_np = input_.type(torch.FloatTensor).numpy()
-				target_np = target_.type(torch.FloatTensor).numpy()
-				output_np = output_.type(torch.FloatTensor).numpy()
+				cm.update(utils.confusion_matrix(prediction, ground_truth, reduce=False))
 
-				y_true = np.concatenate([y_true, target_np], axis = 0)
-				y_pred = np.concatenate([y_pred, output_np], axis = 0)
+				prediction_np = prediction.type(torch.FloatTensor).numpy()
+				ground_truth_np = ground_truth.type(torch.FloatTensor).numpy()
+
+				y_true = np.concatenate([y_true, ground_truth_np], axis = 0)
+				y_pred = np.concatenate([y_pred, prediction_np], axis = 0)
 
 				for batch_idx in range(0, input_.shape[0]):
-					target_b = target_np[batch_idx]
-					output_b = output_np[batch_idx]
+					output_b = prediction_np[batch_idx]
+					target_b = ground_truth_np[batch_idx]
 
-					save_path = "%s/fold%s/%s" % (self.save_path, self.fold, f_name[batch_idx][:-4])
-					self.logger.will_write("[Save] fname:%s true_label:%f prediction:%f" % (f_name[batch_idx][:-4], target_b, output_b))
+					self.logger.will_write("[Test] fname:%s true_label:%f prediction:%f" % (f_name[batch_idx][:-4], target_b, output_b))
 
 			pr_values = np.array(precision_recall_curve(y_true, y_pred))
 
 			roc_auc = roc_auc_score(y_true, y_pred)
 			pr_auc = auc(pr_values[0], pr_values[1], reorder=True)
 
-		self.logger.write("f05:%f f1:%f f2:%f roc:%f pr:%f" % (cm.f05, cm.f1, cm.f2, roc_auc, pr_auc))
+		self.logger.write("accuracy:%f f05:%f f1:%f f2:%f roc:%f pr:%f" % (cm.accuracy, cm.f05, cm.f1, cm.f2, roc_auc, pr_auc))
 		print("End Test\n")

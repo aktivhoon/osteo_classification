@@ -56,7 +56,7 @@ def random_rotate2d(input_, target_):
     return rotate_input, rotate_target
 
 
-def elastic_transform(input_, target_, param_list=None, random_state=None):    
+def elastic_transform(input_, param_list=None, random_state=None):    
     if param_list is None:
         param_list = [(1, 1), (5, 2), (1, 0.5), (1, 3)]
     alpha, sigma = random.choice(param_list)
@@ -76,7 +76,7 @@ def elastic_transform(input_, target_, param_list=None, random_state=None):
     indices = np.reshape(x+dx, (-1, 1)), np.reshape(y+dy, (-1, 1))
     
     transformed = []
-    for image in [input_, target_]:
+    for image in input_:
         new = np.zeros(shape)
         if len(shape) == 3:
             for i in range(image.shape[2]):

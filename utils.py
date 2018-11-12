@@ -7,10 +7,9 @@ import torch.nn.functional as F
 import torch
 import math
 
-def confusion_matrix(x, y, th = 0.5, reduce = True):
+def confusion_matrix(x, y, reduce = True):
 	x_ = x.to(torch.float)
 	y_ = y.to(torch.float)
-
 	c = 2 * y_ - x_
 
 	if reduce:
@@ -18,10 +17,10 @@ def confusion_matrix(x, y, th = 0.5, reduce = True):
 	else:
 		dim = [1, 2, 3]
 
-	tp = (c == 1)
-	tn = (c == 0)
-	fp = (c == -1)
-	fn = (c == 2)
+	tp = (c == 1).float()
+	tn = (c == 0).float()
+	fp = (c == -1).float()
+	fn = (c == 2).float()
 
 	return tp, tn, fp, fn
 
@@ -61,7 +60,7 @@ class ConfusionMatrix(object):
 		self.tn.update(cm[1])
 		self.fp.update(cm[2])
 		self.fn.update(cm[3])
-
+		self.total = self.tp.sum + self.tn.sum + self.fp.sum + self.fn.sum
 		self.prec = self.tp.sum / (self.tp.sum + self.fp.sum + 0.00001)
 		self.recall = self.tp.sum / (self.tp.sum + self.fn.sum + 0.00001)
 		self.accuracy = (self.tp.sum + self.tn.sum) / (self.total)
