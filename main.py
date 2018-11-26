@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
 	train_loader = loader(train_path, arg.batch_size, transform = preprocess, sampler = "weight",
 		torch_type = 'float', cpus = arg.cpus, shuffle = True, drop_last = True)
-	val_loader = loader(val_path, arg.batch_size, transform = None, sampler = '',
+	val_loader = loader(val_path, arg.batch_size, transform = None, sampler = "weight",
 		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)
 	test_loader = loader(test_path, arg.batch_size, transform = None, sampler = '',
 		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)

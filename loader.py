@@ -78,7 +78,7 @@ def loader(image_path, batch_size, patch_size=0, transform=None, sampler='',chan
     dataset = Dataset(image_path, channel, infer=infer, transform=transform, torch_type=torch_type)
     if sampler == "weight":
         weights, img_num_per_class = make_weights_for_balanced_classes(dataset)
-        print("Sampler Weights : ", weights)
+        #print("Sampler Weights : ", weights)
         weights = torch.DoubleTensor(weights)
         img_num_undersampling = img_num_per_class[1] * 2
         print("UnderSample to ", img_num_undersampling, " from ", img_num_per_class)

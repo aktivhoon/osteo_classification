@@ -12,16 +12,10 @@ def confusion_matrix(x, y, reduce = True):
 	y_ = y.to(torch.float)
 	c = 2 * y_ - x_
 
-	if reduce:
-		dim = [0, 1, 2, 3]
-	else:
-		dim = [1, 2, 3]
-
-	tp = (c == 1).float()
-	tn = (c == 0).float()
-	fp = (c == -1).float()
-	fn = (c == 2).float()
-
+	tp = (c == 1).sum(dtype=torch.float)
+	tn = (c == 0).sum(dtype=torch.float)
+	fp = (c == -1).sum(dtype=torch.float)
+	fn = (c == 2).sum(dtype=torch.float)
 	return tp, tn, fp, fn
 
 class AverageMeter(object):

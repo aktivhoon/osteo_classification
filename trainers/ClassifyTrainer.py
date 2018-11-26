@@ -80,7 +80,9 @@ class ClassifyTrainer(BaseTrainer):
 				input_, target_ = input_.to(self.torch_device), target_.to(self.torch_device)
 				output_ = self.G(input_)
 				target_ = target_.long().squeeze(1)
-
+				#print(input_.shape)
+				#print(output_.shape)
+				#print(target_.shape)
 				class_loss = self.class_loss(output_, target_)
 
 				self.optim.zero_grad()
@@ -113,11 +115,11 @@ class ClassifyTrainer(BaseTrainer):
 				output_ = self.G(input_)
 				target_ = target_.to(self.torch_device)
 
-				ground_truth = target_.int()
+				ground_truth = target_.int().squeeze(1)
 				prediction = torch.argmax(output_, dim=1).int()
 
 				cm.update(utils.confusion_matrix(prediction, ground_truth, reduce = False))
-			metric = cm.f2
+			metric = 1.5*cm.f2 + cm.accuracy
 			if metric > self.best_metric:
 				self.best_metric = metric
 				self.save(epoch)
@@ -159,7 +161,7 @@ class ClassifyTrainer(BaseTrainer):
 
 			for i, (input_, target_, f_name) in enumerate(test_loader):
 				input_, output_, target_ = self.forward_for_test(input_, target_)
-				ground_truth = target_.int()
+				ground_truth = target_.int().squeeze(1)
 				prediction = torch.argmax(output_, dim=1).int()
 
 				cm.update(utils.confusion_matrix(prediction, ground_truth, reduce=False))

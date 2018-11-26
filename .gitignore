@@ -1,6 +1,7 @@
 ## Ignore File ##
-
+*.ipynb
 ## Ignore Data ##
 data/
 .DS_Store
 outs/
+
