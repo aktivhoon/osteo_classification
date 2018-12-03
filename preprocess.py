@@ -2,6 +2,8 @@ import random
 import numpy as np
 from scipy.ndimage import gaussian_filter, zoom, rotate, map_coordinates
 
+import warnings
+warnings.filterwarnings("ignore")
 
 def cut_out(input_, target_):
     dx = 20
@@ -76,6 +78,7 @@ def elastic_transform(input_, param_list=None, random_state=None):
     indices = np.reshape(x+dx, (-1, 1)), np.reshape(y+dy, (-1, 1))
     
     transformed = []
+    print(shape)
     for image in input_:
         new = np.zeros(shape)
         if len(shape) == 3:
@@ -86,13 +89,45 @@ def elastic_transform(input_, param_list=None, random_state=None):
         transformed.append(new)
     return transformed
 
+def elastic_transform_2(input_, param_list=None, random_state=None):
+    if param_list is None:
+        param_list = [(1, 1), (5, 2), (1, 0.5), (1, 3)]
+    alpha, sigma = random.choice(param_list)
+
+    assert len(input_.shape)==3
+    shape_2d = input_.shape[1:3]
+    shape = input_.shape
+    if random_state is None:
+        random_state = np.random.RandomState(None)
+
+    dx = gaussian_filter((random_state.rand(*shape_2d) * 2 - 1), sigma, mode="constant", cval = 0) * alpha
+    dy = gaussian_filter((random_state.rand(*shape_2d) * 2 - 1), sigma, mode="constant", cval = 0) * alpha
+
+    x, y = np.meshgrid(np.arange(shape_2d[0]), np.arange(shape_2d[1]), indexing='ij')
+    indices = np.reshape(x+dx, (-1, 1)), np.reshape(y+dy, (-1, 1))
+
+    channel_count = 0
+    new = np.zeros(shape)
+    channel = 0
+    for image in input_:
+        if len(shape) == 4:
+            for i in range(image.shape[3]):
+                new[:, channel, :, i] = map_coordinates(image[:, channel, :, i], indices, order=1, mode="reflect").reshape(shape_2d)
+        else:
+            if channel == 0:
+                new[channel, :, :] = map_coordinates(image[:, :], indices, order=1, mode="reflect").reshape(shape_2d)
+            else:
+                new[channel, :, :] = image[:, :]
+        channel += 1
+    return new
 
 ARG_TO_DICT = {
         "crop":random_crop2d,
         "flip":random_flip2d,        
         "elastic":elastic_transform,
         "rotate":random_rotate2d,
-        "cut":cut_out
+        "cut":cut_out,
+        "cat_elastic":elastic_transform_2
         }
 
 def get_preprocess(preprocess_list):

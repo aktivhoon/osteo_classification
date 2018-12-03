@@ -12,6 +12,10 @@ from utils import torch_downsample
 
 from sklearn.metrics import f1_score, confusion_matrix, recall_score, jaccard_similarity_score, roc_curve, precision_recall_curve, roc_auc_score, auc
 
+from .grad_cam import GradCam
+from torchvision import transforms
+from PIL import Image
+
 class ClassifyTrainer(BaseTrainer):
 	def __init__(self, arg, G, torch_device, class_loss):
 		super(ClassifyTrainer, self).__init__(arg, torch_device)
@@ -165,7 +169,6 @@ class ClassifyTrainer(BaseTrainer):
 				prediction = torch.argmax(output_, dim=1).int()
 
 				cm.update(utils.confusion_matrix(prediction, ground_truth, reduce=False))
-
 				prediction_np = prediction.type(torch.FloatTensor).numpy()
 				ground_truth_np = ground_truth.type(torch.FloatTensor).numpy()
 

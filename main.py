@@ -48,14 +48,14 @@ def arg_parse():
                         help='The setting sampler')
 
     parser.add_argument('--epoch', type=int, default=300, help='The number of epochs')
-    parser.add_argument('--batch_size', type=int, default=12, help='The size of batch')
+    parser.add_argument('--batch_size', type=int, default=8, help='The size of batch')
     parser.add_argument('--test', action="store_true", help='The size of batch')
 
     parser.add_argument('--save_dir', type=str, default='',
                         help='Directory name to save the model')
 
     # Adam Parameter
-    parser.add_argument('--lrG',   type=float, default=0.0005)
+    parser.add_argument('--lrG',   type=float, default=0.0001)
     parser.add_argument('--beta',  nargs="*", type=float, default=(0.5, 0.999))
 
     # DenseNet Parameter
@@ -93,9 +93,9 @@ if __name__ == "__main__":
 	
 	preprocess = preprocess.get_preprocess(arg.augment)
 
-	train_loader = loader(train_path, arg.batch_size, transform = preprocess, sampler = "weight",
+	train_loader = loader(train_path, arg.batch_size, transform = preprocess, sampler = 'weight',
 		torch_type = 'float', cpus = arg.cpus, shuffle = True, drop_last = True)
-	val_loader = loader(val_path, arg.batch_size, transform = None, sampler = "weight",
+	val_loader = loader(val_path, arg.batch_size, transform = None, sampler = 'weight',
 		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)
 	test_loader = loader(test_path, arg.batch_size, transform = None, sampler = '',
 		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)
