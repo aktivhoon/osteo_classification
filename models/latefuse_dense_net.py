@@ -13,16 +13,16 @@ from .dense_layers import *
 import sys
 import math
 
-class DenseNet(nn.Module):
+class LateFuse_DenseNet(nn.Module):
     def __init__(self, growthRate, depth, reduction, nClasses, bottleneck):
-        super(DenseNet, self).__init__()
+        super(LateFuse_DenseNet, self).__init__()
 
         nDenseBlocks = (depth - 4) // 3
         if bottleneck:
             nDenseBlocks //= 2
         
         nChannels = 2 * growthRate
-        self.conv1 = nn.Conv2d(1, nChannels, kernel_size = 3, padding = 1, bias = False)
+        self.conv1 = nn.Conv2d(2, nChannels, kernel_size = 3, padding = 1, bias = False)
 
         self.dense1 = self._make_dense(nChannels, growthRate, nDenseBlocks, bottleneck)		
         nChannels += nDenseBlocks * growthRate
@@ -39,9 +39,7 @@ class DenseNet(nn.Module):
         self.dense3 = self._make_dense(nChannels, growthRate, nDenseBlocks, bottleneck)
         nChannels += nDenseBlocks * growthRate
         self.bn1 = nn.BatchNorm2d(nChannels)
-        self.fc = nn.Linear(nChannels, nClasses)
-#        self.features = nn.Sequential(self.conv1, self.dense1, self.trans1, self.dense2, self.trans2, self.dense3)
-#        self.classifier = nn.Sequential(self.fc)
+        self.fc = nn.Linear(nChannels+3, nClasses)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
@@ -62,12 +60,16 @@ class DenseNet(nn.Module):
             nChannels += growthRate
         return nn.Sequential(*layers)
 
-    def forward(self, x):
-        out = self.conv1(x)
+    def forward(self, x1, x2):
+        out = self.conv1(x1)
         out = self.trans1(self.dense1(out))
         out = self.trans2(self.dense2(out))
         out = self.dense3(out)
         output_size = out.shape
         out = torch.squeeze(F.avg_pool2d(F.relu(self.bn1(out)), (output_size[2], output_size[3])))
+        if len(out.shape) == 1:
+            out = torch.cat((out, torch.squeeze(x2)), 0)
+        else:
+            out = torch.cat((out, x2), 1)
         out = self.fc(out)
         return out

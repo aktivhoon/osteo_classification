@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", ".*output shape of zoom.*")
 
 class Dataset(data.Dataset):
     # TODO : infer implementated
-    def __init__(self, img_root, channel, sampler=None, infer=False, transform=None, torch_type="float", augmentation_rate=0.3):
+    def __init__(self, img_root, channel, sampler=None, infer=False, transform=None, torch_type="float", augmentation_rate=0.3, late_fusion=False):
         if type(img_root) == list:
             img_paths = [p for path in img_root for p in glob(path + "/*.npy")]
         else:
@@ -37,10 +37,14 @@ class Dataset(data.Dataset):
         self.torch_type = torch.float  if torch_type == "float" else torch.half
 
         self.channel = channel
+        self.late_fusion = late_fusion
 
     def __getitem__(self, idx):
         if self.channel == 1:
-            return self._2D_image(idx)
+            if not self.late_fusion:
+                return self._2D_image(idx)
+            else:
+                return self._image_clinic(idx)
         else:
             raise ValueError("Dataset data type must be 2d")
 
@@ -67,16 +71,12 @@ class Dataset(data.Dataset):
         # 2D ( 1 x H x W )
         h = img.shape[0]
         w = img.shape[1]
-        #e_img = self._2D_enhance(img)
+        e_img = self._2D_enhance(img)
         img = img.reshape(1, h, w)
-        #e_img = e_img.reshape(1, h, w)
+        e_img = e_img.reshape(1, h, w)
         
-        _, sex, age, bmi, _ = re.split('-|.npy', img_path.split("_")[-1])
-        sex_array_ = np.full((1, h, w), float(sex))
-        age_array_ = np.full((1, h, w), float(age))
-        bmi_array_ = np.full((1, h, w), float(bmi))
-        input_np = np.concatenate((img, sex_array_, age_array_, bmi_array_), axis = 0)
-        #input_np = np.concatenate((img, e_img), axis = 0)
+#        input_np = np.concatenate((img, e_img), axis = 0)
+        input_np = img
         true_class = np.array([int(img_path.split("_")[-1][0])])
         if idx >= self.origin_image_len:
             for t in self.transform:
@@ -86,23 +86,30 @@ class Dataset(data.Dataset):
         target_  = self._np2tensor(target_np)
         return input_, target_, os.path.basename(img_path)
 
+    def _image_clinic(self, idx):
+        img_path = self.img_paths[idx]
+        input_, target_, _ = self._2D_image(idx)
+        _, sex, age, bmi, _ = re.split('-|.npy', img_path.split("_")[-1])
+        clinic_np = np.array([sex, age, bmi], dtype = float)
+        clinic_ = self._np2tensor(clinic_np)
+        return input_, target_, clinic_, os.path.basename(img_path)
 
 def make_weights_for_balanced_classes(seg_dataset):
     print("weighting..")
     count = [0, 0] # normal, osteoporosis
-    for (img, target, _) in seg_dataset:
+    for (img, target, _, _) in seg_dataset:
         count[int(target[0]==1)] += 1
     N = float(sum(count))
     weight_per_class = [N / c for c in count]
 
     weight = [0] * len(seg_dataset)
-    for i, (img, target, _) in enumerate(seg_dataset):
+    for i, (img, target, _, _) in enumerate(seg_dataset):
         weight[i] = weight_per_class[int(target[0]==1)]
     print("weight done")
     return weight, count
 
-def loader(image_path, batch_size, patch_size=0, transform=None, sampler='',channel=1, torch_type="float", shuffle=True, cpus=1, infer=False, drop_last=True):
-    dataset = Dataset(image_path, channel, infer=infer, transform=transform, torch_type=torch_type)
+def loader(image_path, batch_size, patch_size=0, transform=None, sampler='',channel=1, torch_type="float", shuffle=True, cpus=1, infer=False, drop_last=True, late_fusion = False):
+    dataset = Dataset(image_path, channel, infer=infer, transform=transform, torch_type=torch_type, late_fusion=late_fusion)
     if sampler == "weight":
         weights, img_num_per_class = make_weights_for_balanced_classes(dataset)
         #print("Sampler Weights : ", weights)

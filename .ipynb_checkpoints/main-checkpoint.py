@@ -9,18 +9,8 @@ import utils
 import preprocess
 from loader import loader
 from models.dense_net import DenseNet
-from models.latefuse_dense_net import LateFuse_DenseNet
 
 from trainers.ClassifyTrainer import ClassifyTrainer
-from trainers.LateFuseClassifyTrainer import LateFuseClassifyTrainer
-
-def str2bool(v):
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 def arg_parse():
     desc = "Osteo Classification"
@@ -58,7 +48,7 @@ def arg_parse():
                         help='The setting sampler')
 
     parser.add_argument('--epoch', type=int, default=300, help='The number of epochs')
-    parser.add_argument('--batch_size', type=int, default=12, help='The size of batch')
+    parser.add_argument('--batch_size', type=int, default=8, help='The size of batch')
     parser.add_argument('--test', action="store_true", help='The size of batch')
 
     parser.add_argument('--save_dir', type=str, default='',
@@ -69,9 +59,9 @@ def arg_parse():
     parser.add_argument('--beta',  nargs="*", type=float, default=(0.5, 0.999))
 
     # DenseNet Parameter
-    parser.add_argument('--growthRate', type=int, default=12)
-    parser.add_argument('--depth', type=int, default=40)
-    parser.add_argument('--late_fuse', type=str2bool, nargs='?', const=True, default="NO", help='Activate late fusion')
+    parser.add_argument('--growthRate', type=int, default = 12)
+    parser.add_argument('--depth', type=int, default = 40)
+
     return parser.parse_args()
 
 
@@ -104,21 +94,20 @@ if __name__ == "__main__":
 	preprocess = preprocess.get_preprocess(arg.augment)
 
 	train_loader = loader(train_path, arg.batch_size, transform = preprocess, sampler = 'weight',
-		torch_type = 'float', cpus = arg.cpus, shuffle = True, drop_last = True, late_fusion = arg.late_fuse)
+		torch_type = 'float', cpus = arg.cpus, shuffle = True, drop_last = True)
 	val_loader = loader(val_path, arg.batch_size, transform = None, sampler = 'weight',
-		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True, late_fusion = arg.late_fuse)
+		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)
 	test_loader = loader(test_path, arg.batch_size, transform = None, sampler = '',
-		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True, late_fusion = arg.late_fuse)
+		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True)
 
+	net = DenseNet(growthRate = arg.growthRate, depth = arg.depth, reduction = 0.5, bottleneck = True, nClasses = 2)
+
+	net = nn.DataParallel(net).to(torch_device)
+
+	# TODO : redfine loss
 	class_loss = nn.CrossEntropyLoss()
-	if arg.late_fuse:
-		net = LateFuse_DenseNet(growthRate = arg.growthRate, depth = arg.depth, reduction = 0.5, bottleneck = True, nClasses = 2)
-		net = nn.DataParallel(net).to(torch_device)
-		model = LateFuseClassifyTrainer(arg, net, torch_device, class_loss = class_loss)
-	else:
-		net= DenseNet(growthRate = arg.growthRate, depth = arg.depth, reduction = 0.5, bottleneck = True, nClasses = 2)
-		net = nn.DataParallel(net).to(torch_device)
-		model = ClassifyTrainer(arg, ent, torch_device, class_loss = class_loss)
+
+	model = ClassifyTrainer(arg, net, torch_device, class_loss = class_loss)
 
 	if arg.test is False:
 		model.train(train_loader, val_loader)
