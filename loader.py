@@ -55,6 +55,8 @@ class Dataset(data.Dataset):
         tmp = torch.from_numpy(np)
         return tmp.to(dtype=self.torch_type)
     
+    # This function enhances the contrast of the x-ray image.
+    # Use this function if enhancing is needed.
     def _2D_enhance(self, img):
         enhanced = exposure.equalize_adapthist(img, clip_limit=0.03)
         filtered = ndimage.median_filter(enhanced, size = 1)
@@ -64,6 +66,7 @@ class Dataset(data.Dataset):
         e_img /= np.max(e_img)
         return e_img
 
+    # concatenates enhanced image with the original image
     def _2D_image(self, idx):
         img_path = self.img_paths[idx]
         img = np.load(img_path).astype(float)
@@ -86,6 +89,7 @@ class Dataset(data.Dataset):
         target_  = self._np2tensor(target_np)
         return input_, target_, os.path.basename(img_path)
 
+    # image (input_) and clinic data (clinic_) is returned together with true label (target_)
     def _image_clinic(self, idx):
         img_path = self.img_paths[idx]
         input_, target_, _ = self._2D_image(idx)

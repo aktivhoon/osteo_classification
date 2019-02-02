@@ -57,7 +57,7 @@ def random_rotate2d(input_, target_):
                            reshape=False)
     return rotate_input, rotate_target
 
-
+# elastic transformation applied to 2d image (will be called by --augment elastic)
 def elastic_transform(input_, param_list=None, random_state=None):    
     if param_list is None:
         param_list = [(1, 1), (5, 2), (1, 0.5), (1, 3)]
@@ -89,6 +89,7 @@ def elastic_transform(input_, param_list=None, random_state=None):
         transformed.append(new)
     return transformed
 
+# elastic transformation applied to concatenated 2d images (will be called by --augment cat_elastic)
 def elastic_transform_2(input_, param_list=None, random_state=None):
     if param_list is None:
         param_list = [(1, 1), (5, 2), (1, 0.5), (1, 3)]

@@ -40,8 +40,6 @@ class DenseNet(nn.Module):
         nChannels += nDenseBlocks * growthRate
         self.bn1 = nn.BatchNorm2d(nChannels)
         self.fc = nn.Linear(nChannels, nClasses)
-#        self.features = nn.Sequential(self.conv1, self.dense1, self.trans1, self.dense2, self.trans2, self.dense3)
-#        self.classifier = nn.Sequential(self.fc)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels

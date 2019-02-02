@@ -14,6 +14,9 @@ from models.latefuse_dense_net import LateFuse_DenseNet
 from trainers.ClassifyTrainer import ClassifyTrainer
 from trainers.LateFuseClassifyTrainer import LateFuseClassifyTrainer
 
+# str2bool function changes yes, true, t, y, 1 all to True,
+# while changing no, false, f, n, 0 all to False.
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
@@ -21,6 +24,9 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
+# arg_parse obtains the -- command as options, enabling to choose
+# many different options in training.
 
 def arg_parse():
     desc = "Osteo Classification"
@@ -40,7 +46,6 @@ def arg_parse():
 
 
 
-    # TODO : Weighted BCE
     parser.add_argument('--loss', type=str, default='BCE',
                         choices=['BCE'])
     # Loss Params
@@ -97,11 +102,17 @@ if __name__ == "__main__":
 	os.environ["CUDA_VISIBLE_DEVICES"] = arg.gpus
 	torch_device = torch.device("cuda")
 
+    # path of training, validation, test sets should be defined below
 	train_path = "data/train/"
 	val_path = "data/val/"
 	test_path = "data/test/"
 	
+    # get preprocess options from --augment option
 	preprocess = preprocess.get_preprocess(arg.augment)
+
+    # CAUTION: always use sampler = 'weight' for at least training and validation set,
+    # to ensure the class balance in those two sets. Otherwise the neural net might
+    # simply learn to choose one simple category haivng most abundant samples.
 
 	train_loader = loader(train_path, arg.batch_size, transform = preprocess, sampler = 'weight',
 		torch_type = 'float', cpus = arg.cpus, shuffle = True, drop_last = True, late_fusion = arg.late_fuse)
@@ -110,7 +121,10 @@ if __name__ == "__main__":
 	test_loader = loader(test_path, arg.batch_size, transform = None, sampler = '',
 		torch_type = 'float', cpus = arg.cpus, shuffle = False, drop_last = True, late_fusion = arg.late_fuse)
 
+    # the default loss function is the cross entropy loss
+
 	class_loss = nn.CrossEntropyLoss()
+    
 	if arg.late_fuse:
 		net = LateFuse_DenseNet(growthRate = arg.growthRate, depth = arg.depth, reduction = 0.5, bottleneck = True, nClasses = 2)
 		net = nn.DataParallel(net).to(torch_device)

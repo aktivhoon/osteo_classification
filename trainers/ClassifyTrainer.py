@@ -84,9 +84,6 @@ class ClassifyTrainer(BaseTrainer):
 				input_, target_ = input_.to(self.torch_device), target_.to(self.torch_device)
 				output_ = self.G(input_)
 				target_ = target_.long().squeeze(1)
-				#print(input_.shape)
-				#print(output_.shape)
-				#print(target_.shape)
 				class_loss = self.class_loss(output_, target_)
 
 				self.optim.zero_grad()

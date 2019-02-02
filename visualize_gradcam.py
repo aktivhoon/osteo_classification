@@ -12,10 +12,17 @@ import numpy as np
 
 if __name__ == "__main__":
 	os.environ["CUDA_VISIBLE_DEVICES"] = "0, 1, 2, 3"
+	# path where your model is saved
 	save_path = '/home/intern/osteo_classification/outs/fold_DenseNet_acc_m2'
 	ckpoint = torch.load(save_path + "/models.pth.tar")
 	torch_device = torch.device("cuda")
+	# load images that you want to visualize
 	log_path = save_path + '/TP.txt'
+
+	# For example, TP.txt file contains name of image files manully selected from
+	# the test set, which are classified as true positive images.
+	# ex) 20080169_1_1-0-74-16.13539388
+
 	f = open(log_path, 'r')
 	lines = f.readlines()
 	lines = np.array(lines)
@@ -24,6 +31,8 @@ if __name__ == "__main__":
 	model = DenseNet(growthRate = 12, depth = 40, reduction = 0.5, bottleneck = True, nClasses = 2)
 	model = nn.DataParallel(model).to(torch_device)
 	model.load_state_dict(ckpoint['network'])
+	# by changing 'hooks', you can choose the layer which you want to visualize
+	# to check name of layers, use model.module to print out the whole structure of the neural net
 	grad_cam = GradCam(model=model.module, hooks = ["dense2"], device=torch_device)
 
 	test_path= "/home/intern/osteo_classification/data/test/"
