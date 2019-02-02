@@ -10,11 +10,11 @@ python3 main.py --model dense_net --fold _Dense_LF --augment cat_elastic --late_
 
 where `--model` is the command for choosing the neural network structure (is `dense_net` as default), `--augment` is augmentation option (`cat_elastic` is augmentation for concatenated image -- i.e. concatenation of original image + enhanced image).
 
-<img src="./images/dense.png">
+<img src="./images/Dense.png">
 
 If you want the model to lately fuse clinical information to the network (which is added up to the image itself as default), option `--late_fuse` should be `True`.
 
-<img src="./images/dense2.png">
+<img src="./images/Dense2.png">
 
 ## Data preprocessing
 
